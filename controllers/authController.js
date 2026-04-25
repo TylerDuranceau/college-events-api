@@ -7,7 +7,7 @@ exports.register = async (req, res, next) => {
   try {
     console.log(req.body);
 
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'All fields required' });
@@ -18,7 +18,8 @@ exports.register = async (req, res, next) => {
     const user = await User.create({
       name,
       email,
-      password: hashed
+      password: hashed,
+      role: role || 'student' // ← THIS FIXES YOUR ISSUE
     });
 
     res.status(201).json(user);
@@ -36,7 +37,7 @@ exports.login = async (req, res, next) => {
 
     const user = await User.findOne({
       where: { email },
-      attributes: { include: ['password'] } // FIX
+      attributes: { include: ['password'] }
     });
 
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
@@ -46,7 +47,7 @@ exports.login = async (req, res, next) => {
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
     const token = jwt.sign(
-      { id: user.id },
+      { id: user.id, role: user.role }, // include role in token
       process.env.JWT_SECRET
     );
 
