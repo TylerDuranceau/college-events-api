@@ -9,6 +9,7 @@ exports.register = async (req, res, next) => {
 
     const { name, email, password, role } = req.body;
 
+    // validation
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'All fields required' });
     }
@@ -19,7 +20,7 @@ exports.register = async (req, res, next) => {
       name,
       email,
       password: hashed,
-      role: role || 'student' // ← THIS FIXES YOUR ISSUE
+      role: role || 'student'
     });
 
     res.status(201).json(user);
@@ -40,14 +41,19 @@ exports.login = async (req, res, next) => {
       attributes: { include: ['password'] }
     });
 
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
 
     const valid = await bcrypt.compare(password, user.password);
 
-    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!valid) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
 
+    // include role in token
     const token = jwt.sign(
-      { id: user.id, role: user.role }, // include role in token
+      { id: user.id, role: user.role },
       process.env.JWT_SECRET
     );
 
